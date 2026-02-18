@@ -6,7 +6,6 @@ const App = () => {
   const [area, setArea] = useState(0);
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  console.log(shapes);
   const canvasRef = useRef(null);
 
   // Load shapes from backend
@@ -33,7 +32,7 @@ const App = () => {
   useEffect(() => {
     drawShape();
     calculateArea();
-  }, [dimensions]);
+  }, [dimensions, shapeType]);
 
   const drawShape = () => {
     const canvas = canvasRef.current;
@@ -190,7 +189,11 @@ const App = () => {
         )}
       </div>
 
-      <h3>Calculated Area: {area} units²</h3>
+      {Object.keys(dimensions).length > 0 ? (
+        <h3>Calculated Area: {area} units²</h3>
+      ) : (
+        <h3>Calculated Area: -</h3>
+      )}
 
       <button onClick={saveShape} style={{ marginTop: "15px" }}>
         {selectedId ? "Update Shape" : "Save Shape"}
