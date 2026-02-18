@@ -6,7 +6,7 @@ const App = () => {
   const [area, setArea] = useState(0);
   const [shapes, setShapes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-
+  console.log(shapes);
   const canvasRef = useRef(null);
 
   // Load shapes from backend
@@ -20,16 +20,15 @@ const App = () => {
     setShapes(data);
   };
 
-  // Default dimensions
-  useEffect(() => {
-    if (shapeType === "RECTANGLE") {
-      setDimensions({ width: 100, height: 100 });
-    } else if (shapeType === "CIRCLE") {
-      setDimensions({ radius: 50 });
-    } else if (shapeType === "TRIANGLE") {
-      setDimensions({ base: 100, height: 80 });
-    }
-  }, [shapeType]);
+  const handleShapeTypeChange = (e) => {
+    const newType = e.target.value;
+    setShapeType(newType);
+    if (newType === "RECTANGLE") setDimensions({ width: 100, height: 100 });
+    else if (newType === "CIRCLE") setDimensions({ radius: 50 });
+    else if (newType === "TRIANGLE") setDimensions({ base: 100, height: 80 });
+
+    setSelectedId(null);
+  };
 
   useEffect(() => {
     drawShape();
@@ -121,15 +120,26 @@ const App = () => {
     await fetch(`http://localhost:8080/api/shapes/${id}`, {
       method: "DELETE",
     });
+
     fetchShapes();
+
+    if (selectedId === id) {
+      setSelectedId(null);
+      setDimensions({});
+      setArea(0);
+
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="container">
       <h2>Shape Designer</h2>
 
       <label>Select Shape: </label>
-      <select value={shapeType} onChange={(e) => setShapeType(e.target.value)}>
+      <select value={shapeType} onChange={handleShapeTypeChange}>
         <option value="RECTANGLE">Rectangle</option>
         <option value="CIRCLE">Circle</option>
         <option value="TRIANGLE">Triangle</option>
@@ -180,9 +190,9 @@ const App = () => {
         )}
       </div>
 
-      <h3>Calculated Area: {area}</h3>
+      <h3>Calculated Area: {area} units²</h3>
 
-      <button onClick={saveShape} style={{ marginTop: "10px" }}>
+      <button onClick={saveShape} style={{ marginTop: "15px" }}>
         {selectedId ? "Update Shape" : "Save Shape"}
       </button>
 
@@ -193,13 +203,18 @@ const App = () => {
         style={{ border: "1px solid black", marginTop: "20px" }}
       ></canvas>
 
-      <h3>Saved Shapes</h3>
+      {shapes.length > 0 && <h3>Saved Shapes</h3>}
+
       <ul>
         {shapes.map((shape) => (
-          <li key={shape.id}>
-            {shape.name} ({shape.type})
-            <button onClick={() => editShape(shape)}> Edit </button>
-            <button onClick={() => deleteShape(shape.id)}> Delete </button>
+          <li key={shape.id} className="shape-row">
+            <div className="shape-info">
+              {shape.name} ({shape.type})
+            </div>
+            <div className="shape-actions">
+              <button onClick={() => editShape(shape)}>Edit</button>
+              <button onClick={() => deleteShape(shape.id)}>Delete</button>
+            </div>
           </li>
         ))}
       </ul>
